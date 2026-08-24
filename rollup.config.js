@@ -19,7 +19,8 @@ export default defineConfig({
     output: {
         dir: 'dist',
         entryFileNames: '[name].js',
-        format: 'es'
+        format: 'es',
+        banner: '#!/usr/bin/env node'
     },
     external: [...Object.keys(pkg.dependencies), ...builtinModules, /node:/],
     plugins: [
