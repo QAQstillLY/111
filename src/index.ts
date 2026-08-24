@@ -14,7 +14,7 @@ import Password from '@inquirer/password'
 import Select from '@inquirer/select'
 import Checkbox from '@inquirer/checkbox'
 import ProgressBar from 'progress'
-import { Comic } from './types'
+import { Comic, Episode } from './types'
 import pLimit from 'p-limit'
 import pico from 'picocolors'
 import Table from 'cli-table3'
@@ -184,6 +184,18 @@ async function main() {
             }
             return []
         })
+        const seenTitles = new Set<string>()
+        const dupTitles = new Set<string>()
+        for (const ep of episodes) {
+            const t = ep.title.trim()
+            if (seenTitles.has(t)) dupTitles.add(t)
+            seenTitles.add(t)
+        }
+        const episodeDir = (ep: Episode) => {
+            const t = ep.title.trim()
+            return dupTitles.has(t) ? `${t} #${ep.order}` : t
+        }
+
         episodes = filterEpisodes(episodes, cid)
         spinner.stop()
 
@@ -210,9 +222,11 @@ async function main() {
                 })
 
         for (const ep of selectedEpisodes) {
-            spinner.start(`正在获取章节 ${pico.cyan(ep.title)} 的图片列表`)
+            const epDir = episodeDir(ep)
+            spinner.start(`正在获取章节 ${pico.cyan(epDir)} 的图片列表`)
             let pictures = await pica.picturesAll(cid, ep)
-            pictures = filterPictures(pictures, title, ep.title)
+            pictures.forEach((pic) => (pic.epTitle = epDir))
+            pictures = filterPictures(pictures, title, epDir)
             spinner.stop()
 
             const bar = new ProgressBar(
