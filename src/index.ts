@@ -177,13 +177,20 @@ async function main() {
         const cid = comic._id
 
         spinner.start('正在获取章节信息')
+        let failed = false
         let episodes = await pica.episodesAll(cid).catch((error) => {
+            spinner.stop()
+            failed = true
             if (error === 400) {
-                spinner.stop()
                 log.error(`「${title}」无法访问，可能已被哔咔禁止`)
+            } else {
+                log.error(
+                    `获取「${title}」章节失败: ${(error as Error)?.message ?? error}`
+                )
             }
             return []
         })
+        if (failed) continue
         episodes = filterEpisodes(episodes, cid)
         spinner.stop()
 
